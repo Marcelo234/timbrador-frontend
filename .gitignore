@@ -1,0 +1,35 @@
+# --- Estructura Mixta (Frontend + Backend) ---
+
+# Salidas de compilación (Angular y .NET)
+**/dist/
+**/tmp/
+**/out-tsc/
+**/bazel-out/
+**/bin/
+**/obj/
+**/publish/
+
+# Dependencias de paquetes
+**/node_modules/
+npm-debug.log
+yarn-error.log
+
+# Cache de Angular
+**/.angular/cache
+
+# Archivos de Visual Studio / VS Code
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.user
+*.suo
+*.sln.docstates
+
+# Archivos de Sistema y Temporales
+.DS_Store
+Thumbs.db
+*.log
+.history/

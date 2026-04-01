@@ -1,0 +1,148 @@
+<div class="dashboard">
+
+  <!-- Toast -->
+  <div class="toast" [class.toast-visible]="toastVisible">{{ toastMessage }}</div>
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <span class="logo">⏱ Timbrador</span>
+      <span class="date">{{ today | date:'EEEE, d MMMM yyyy' }}</span>
+    </div>
+    <div class="header-right">
+      <span class="user-name" *ngIf="currentUser">
+        {{ currentUser.nombres }} {{ currentUser.apellidos }}
+      </span>
+      <button class="btn-logout" (click)="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+
+    <!-- Mi Jornada -->
+    <section class="card card-clock">
+      <h2 class="card-title">Mi Jornada</h2>
+
+      <div class="status-badge" [ngClass]="'badge-' + (status?.currentAction ?? 'None')">
+        {{ currentLabel }}
+      </div>
+
+      <ng-container *ngIf="status === null && !statusError">
+        <div class="status-loading">Cargando estado...</div>
+      </ng-container>
+
+      <ng-container *ngIf="status === null && statusError">
+        <div class="error-msg">No se pudo cargar el estado. Recarga la página.</div>
+      </ng-container>
+
+      <ng-container *ngIf="status !== null && !cycleComplete">
+        <button
+          class="btn-clock"
+          [ngClass]="buttonColor"
+          [disabled]="clocking"
+          (click)="clock()">
+          <span *ngIf="!clocking">{{ nextLabel }}</span>
+          <span *ngIf="clocking">Registrando...</span>
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="status !== null && cycleComplete">
+        <div class="completed-msg">
+          ✅ Jornada completada. ¡Buen trabajo hoy!
+        </div>
+      </ng-container>
+
+      <p class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </section>
+
+    <!-- Estado del Equipo -->
+    <section class="card card-team">
+      <h2 class="card-title">Estado del Equipo</h2>
+
+      <div class="team-grid">
+        <div
+          class="team-member"
+          *ngFor="let member of teamStatus"
+          [class.is-me]="isCurrentUser(member)">
+
+          <div class="member-indicator">{{ teamMemberIndicator(member.currentAction) }}</div>
+          <div class="member-info">
+            <span class="member-name">
+              {{ member.nombre }}
+              <span class="you-badge" *ngIf="isCurrentUser(member)">Tú</span>
+            </span>
+            <span class="member-status">{{ teamMemberLabel(member.currentAction) }}</span>
+            <span class="member-time" *ngIf="member.lastTimestamp">
+              Última acción: {{ formatTime(member.lastTimestamp) }}
+            </span>
+          </div>
+          <div class="presence-dot" [class.online]="isOnline(member)" [title]="isOnline(member) ? 'Activo hace menos de 5 min' : 'Sin actividad reciente'"></div>
+        </div>
+      </div>
+
+      <p class="poll-note">Actualización automática cada 10 segundos</p>
+    </section>
+
+  </main>
+
+  <!-- Historial Semanal -->
+  <section class="history-section">
+    <div class="history-card card">
+
+      <div class="history-header">
+        <h2 class="card-title" style="margin:0">Historial Semanal</h2>
+        <div class="week-nav">
+          <button class="nav-btn" (click)="prevWeek()">&#8592; Semana anterior</button>
+          <span class="week-range" *ngIf="weekHistory">
+            {{ formatDate(weekHistory.weekStart) }} — {{ formatDate(weekHistory.weekEnd) }}
+          </span>
+          <button class="nav-btn" (click)="nextWeek()" [disabled]="!canGoNext">Semana siguiente &#8594;</button>
+        </div>
+      </div>
+
+      <div class="history-loading" *ngIf="loadingHistory">Cargando historial...</div>
+
+      <div class="table-wrapper" *ngIf="!loadingHistory && weekHistory">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Entrada</th>
+              <th>Ini. Almuerzo</th>
+              <th>Fin Almuerzo</th>
+              <th>Salida</th>
+              <th>Horas efectivas</th>
+              <th>Cumplimiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let day of weekHistory.days" [class.workday]="day.isWorkDay">
+              <td>
+                <span class="day-name">{{ day.dayOfWeek }}</span>
+                <span class="day-date">{{ formatDate(day.date) }}</span>
+              </td>
+              <td>{{ formatTime(day.clockIn) }}</td>
+              <td>{{ formatTime(day.lunchStart) }}</td>
+              <td>{{ formatTime(day.lunchEnd) }}</td>
+              <td>{{ formatTime(day.clockOut) }}</td>
+              <td>{{ formatHours(day.effectiveHours) }}</td>
+              <td>
+                <span
+                  class="compliance-badge"
+                  [ngClass]="{
+                    'compliance-ok':         day.compliance === 'Cumplido',
+                    'compliance-incomplete': day.compliance === 'Incompleto',
+                    'compliance-none':       !day.isWorkDay || day.compliance === null
+                  }">
+                  {{ day.isWorkDay ? (day.compliance ?? '—') : '—' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+</div>
