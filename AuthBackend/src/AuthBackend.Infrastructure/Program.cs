@@ -50,7 +50,7 @@ builder.Services.AddSwaggerGen(c =>
 
 // ─── EF Core ────────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ─── Repositorios ───────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();

@@ -23,13 +23,8 @@ WORKDIR /app
 # Create a non-root user for security
 RUN groupadd --system appgroup && useradd --system --gid appgroup appuser
 
-# SQLite DB lives in a dedicated directory so it can be mounted as a volume
-RUN mkdir -p /app/data && chown appuser:appgroup /app/data
-
 COPY --from=build /app/publish .
 
-# Override the connection string to point at the volume-mounted path
-ENV ConnectionStrings__DefaultConnection="Data Source=/app/data/auth.db"
 ENV ASPNETCORE_URLS="http://+:8080"
 ENV ASPNETCORE_ENVIRONMENT="Production"
 
