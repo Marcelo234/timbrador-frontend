@@ -1,10 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using AuthBackend.Domain.Entities;
 using AuthBackend.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthBackend.Infrastructure.Services;
@@ -27,24 +27,25 @@ public class JwtTokenService : IJwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var descriptor = new SecurityTokenDescriptor
+        var claims = new[]
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("nombres", usuario.Nombres),
-                new Claim("apellidos", usuario.Apellidos)
-            }),
-            Issuer = _issuer,
-            Audience = _audience,
-            Expires = DateTime.UtcNow.AddMinutes(15),
-            SigningCredentials = credentials
+            new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("nombres", usuario.Nombres),
+            new Claim("apellidos", usuario.Apellidos)
         };
 
-        var handler = new JsonWebTokenHandler();
-        return handler.CreateToken(descriptor);
+        var token = new JwtSecurityToken(
+            issuer:             _issuer,
+            audience:           _audience,
+            claims:             claims,
+            notBefore:          DateTime.UtcNow,
+            expires:            DateTime.UtcNow.AddMinutes(15),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     public string GenerarRefreshToken()

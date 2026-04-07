@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, throwError } from 'rxjs';
 import { catchError, filter, switchMap, take, tap } from 'rxjs/operators';
 
 import { TokenService } from '../services/token.service';
@@ -61,7 +61,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           isRefreshing = false;
           refreshToken$.next(response.accessToken);
         }),
-        switchMap((response: TokenResponse) => next(addHeaders(req, response.accessToken))),
+        switchMap((response: TokenResponse) =>
+          next(addHeaders(req, response.accessToken)).pipe(
+            catchError((retryError) => {
+              // Retry also failed — token is genuinely invalid, force logout
+              if (retryError instanceof HttpErrorResponse && retryError.status === 401) {
+                tokenService.clearTokens();
+                router.navigate(['/login']);
+              }
+              return throwError(() => retryError);
+            })
+          )
+        ),
         catchError((refreshError) => {
           isRefreshing = false;
           refreshToken$.next(null);
