@@ -71,7 +71,7 @@ public class AuthController : ControllerBase
         await _sesionRepository.GuardarSesion(nuevaSesion);
 
         var newAccessToken = _jwtTokenService.GenerarAccessToken(usuario);
-        return Ok(new { accessToken = newAccessToken, refreshToken = newRefreshToken, expiresIn = 900 });
+        return Ok(new { accessToken = newAccessToken, refreshToken = newRefreshToken, expiresIn = 3600 });
     }
 
     [Authorize]

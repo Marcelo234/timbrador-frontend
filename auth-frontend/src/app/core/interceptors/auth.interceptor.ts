@@ -59,12 +59,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       return authService.refreshToken().pipe(
         tap((response: TokenResponse) => {
           isRefreshing = false;
+          // Explicitly persist both tokens — the rotated refresh token MUST be saved
+          // or the next expiry will fail with an invalid refresh token
+          tokenService.saveTokens(response.accessToken, response.refreshToken);
           refreshToken$.next(response.accessToken);
         }),
         switchMap((response: TokenResponse) =>
           next(addHeaders(req, response.accessToken)).pipe(
             catchError((retryError) => {
-              // Retry also failed — token is genuinely invalid, force logout
+              isRefreshing = false;
+              refreshToken$.next(null);
               if (retryError instanceof HttpErrorResponse && retryError.status === 401) {
                 tokenService.clearTokens();
                 router.navigate(['/login']);
