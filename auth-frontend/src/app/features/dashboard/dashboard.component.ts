@@ -48,7 +48,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private heartbeatSub?: Subscription;
 
   // How often to refresh status + team (ms)
-  private static readonly POLL_INTERVAL = 10_000;
+  private static readonly POLL_INTERVAL = 60_000;
 
   constructor(
     private authService: AuthService,
