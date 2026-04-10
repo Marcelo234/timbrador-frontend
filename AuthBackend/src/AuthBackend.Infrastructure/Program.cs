@@ -134,9 +134,13 @@ builder.Services.AddCors(options =>
 // ─── Build ───────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();   
+
 // ─── Swagger UI (always available) ──────────────────────────────────────────────
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AuthBackend API v1"));
+
+app.UseRouting();
 
 app.UseCors("FrontendPolicy");
 
@@ -146,12 +150,17 @@ app.Use(async (context, next) =>
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["X-Frame-Options"] = "DENY";
     context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-    context.Response.Headers["ngrok-skip-browser-warning"] = "true";
+
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.StatusCode = 20;
+        await context.Response.CompleteAsync(); 
+    }
     await next();
 });
 
 // ─── Middleware Pipeline ─────────────────────────────────────────────────────────
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.UseMiddleware<RateLimitingMiddleware>();
 
 // UseHttpsRedirection removed — dev server runs on HTTP only.
